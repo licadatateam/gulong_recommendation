@@ -739,7 +739,9 @@ if __name__ == '__main__':
             else:
                 y_filter = model_filter[model_filter['car_year'] == year]
 
-            final_filter = y_filter.copy()
+            final_filter = df[(df.width.isin(y_filter.width.unique())) & \
+                (df.aspect_ratio.isin(y_filter.aspect_ratio.unique())) & \
+                    (df.diameter.isin(y_filter.diameter.unique()))]
             
     # main window
     selected = final_filter.copy()
