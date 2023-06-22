@@ -435,7 +435,7 @@ def combine_sku(make, w, ar, d, model, load, speed):
     '''
     specs = combine_specs(w, ar, d, mode = 'SKU')
     
-    if (load in ['nan', np.NaN, None]) or (speed in ['nan', np.NaN, None]):
+    if (load in ['nan', np.NaN, None, '-', '', ' ']) or (speed in ['nan', np.NaN, None, '-', '', ' ']):
         return ' '.join([make, specs, model])
     else:
         return ' '.join([make, specs, model, load + speed])
