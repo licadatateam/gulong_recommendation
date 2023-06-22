@@ -13,8 +13,6 @@ import re, time, sys, os
 from datetime import datetime, timedelta, date, time
 import time
 from pytz import timezone
-import gspread, json, doctest
-import json
 import doctest
 import config_carmax
 
