@@ -738,6 +738,8 @@ if __name__ == '__main__':
                 y_filter = model_filter
             else:
                 y_filter = model_filter[model_filter['car_year'] == year]
+
+            final_filter = y_filter.copy()
             
     # main window
     selected = final_filter.copy()
