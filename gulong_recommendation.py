@@ -585,6 +585,7 @@ def get_car_compatible():
         comp_data.loc[:, 'width'] =  comp_data.apply(lambda x: clean_width(x['section_width']), axis=1)
         comp_data.loc[:, 'aspect_ratio'] = comp_data.apply(lambda x: clean_aspect_ratio(x['aspect_ratio']), axis=1)
         comp_data.loc[:, 'diameter'] = comp_data.apply(lambda x: clean_diameter(x['rim_size']), axis=1)
+        comp_data.loc[:, 'correct_specs'] = comp_data.apply(lambda x: combine_specs(x['width'], x['aspect_ratio'], x['diameter'], mode = 'MATCH'), axis=1)
         return comp_data
     
     start_time = time.time()
@@ -739,9 +740,7 @@ if __name__ == '__main__':
             else:
                 y_filter = model_filter[model_filter['car_year'] == year]
 
-            final_filter = df[(df.width.isin(y_filter.width.unique())) & \
-                (df.aspect_ratio.isin(y_filter.aspect_ratio.unique())) & \
-                    (df.diameter.isin(y_filter.diameter.unique()))]
+            final_filter = df[df.correct_specs.isin(y_filter.correct_specs.unique())]
             
     # main window
     selected = final_filter.copy()
