@@ -578,32 +578,18 @@ def get_car_compatible():
     
         print ('Importing makes and models list')
         makes_list = config_carmax.import_makes()
-        models_list = config_carmax.import_models()
         
         print ('Cleaning data')
         comp_data.loc[:, 'car_make'] = comp_data.apply(lambda x: config_carmax.clean_makes(x['car_make'], makes_list), axis=1)
-        comp_data.loc[:, 'car_model'] = comp_data.apply(lambda x: config_carmax.clean_model(x['car_model'], makes_list, models_list), axis=1)
-        
+        comp_data.loc[:, 'car_model'] = comp_data.apply(lambda x: ' '.join(x['car_model'].split('-')).upper(), axis=1)
         comp_data.loc[:, 'width'] =  comp_data.apply(lambda x: clean_width(x['section_width']), axis=1)
         comp_data.loc[:, 'aspect_ratio'] = comp_data.apply(lambda x: clean_aspect_ratio(x['aspect_ratio']), axis=1)
         comp_data.loc[:, 'diameter'] = comp_data.apply(lambda x: clean_diameter(x['rim_size']), axis=1)
-        comp_data.to_csv('car_comp_tire_size.csv')
         return comp_data
     
     start_time = time.time()
     print ('Start car comparison tire size data import')
-    if os.path.exists('car_comp_tire_size.csv'):
-        try:
-            car_comp_dtime = datetime.fromtimestamp(os.path.getmtime('car_comp_tire_size.csv')).date()
-            if (car_comp_dtime >= (datetime.today().date() - timedelta(days = 4))):
-                print (f'Importing recent saved data on {car_comp_dtime}')
-                comp_data = pd.read_csv('car_comp_tire_size.csv')
-            else:
-                raise Exception
-        except:
-            comp_data = import_data()
-    else:
-        comp_data = import_data()
+    comp_data = import_data()
     
     #comp_data.loc[:,'year'] = comp_data.year.astype(str)
     print ('Imported tire size car comparison data')
