@@ -13,11 +13,12 @@ import re, time, sys, os
 from datetime import datetime, timedelta, date, time
 import time
 from pytz import timezone
-import doctest
+import gspread, doctest
 import config_carmax
 
 import streamlit as st
 from st_aggrid import GridOptionsBuilder, AgGrid
+import extra_streamlit_components as stx
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 output_path = os.path.abspath(os.path.dirname(__file__))
@@ -435,7 +436,7 @@ def combine_sku(make, w, ar, d, model, load, speed):
     '''
     specs = combine_specs(w, ar, d, mode = 'SKU')
     
-    if (load in ['nan', np.NaN, None, '-', '', ' ']) or (speed in ['nan', np.NaN, None, '-', '', ' ']):
+    if (load in ['nan', np.NaN, None, '-', '']) or (speed in ['nan', np.NaN, None, '', '-']):
         return ' '.join([make, specs, model])
     else:
         return ' '.join([make, specs, model, load + speed])
@@ -566,6 +567,40 @@ def get_gulong_data():
     
     return df
 
+
+def read_gsheet(url, title):
+    
+    credentials = {
+      "type": "service_account",
+      "project_id": "xenon-point-351408",
+      "private_key_id": "f19cf14da43b38064c5d74ba53e2c652dba8cbfd",
+      "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC5fe2N4yS74jTP\njiyv1EYA+XgnrTkZHwMx4ZY+zLuxx/ODPGxJ3m2e6QRUtz6yBUp1DD3nvzaMYY2d\nea6ti0fO2EPmmNIAZzgWVMOqaGePfXZPN1YN5ncLegZFheZuDrsz0/E+KCVUpLbr\nWBRTBF7l0sZ7paXZsVYOu/QAJI1jPRNF3lFUxMDSE8eGx+/oUmomtl+NfCi/FEJ5\nFCU4pF1FQNmVo885HGe9Tx7UywgaXRvAGJZlA4WVie4d5Jhj8LjZRhSH8+uDgdGX\ngc/4GI8U831oQ2lHsrtYIHHNzs1EG/8Ju+INdgR/Zc5SxNx/BSF8gV7kSueEd8+/\nXlobf5JZAgMBAAECggEAHRPWBOuKCx/jOnQloiyLCsUQplubu0nmxM+Br3eFptFa\n5YQ3z36cPZB2mtcc72gv61hPbgBGC0yRmBGGpfLS/2RchI4JQYHsw2dnQtPaBB7d\nSH66sTQjDjwDNqvOWwtZIj9DroQ5keK+P/dPPFJPlARuE9z8Ojt365hgIBOazGb2\ngIh9wLXrVq7Ki8OXI+/McrxkH3tDksVH2LmzKGtWBA56MRY0v9vnJFjVd+l8Q+05\nIw4lQXt55dK7EmRLIfLnawHYIvnpalCWPe6uAmCTeoOuGASLFJJR2uzcOW9IxM0a\nMkR2dduu5vQl/ahJwxZ2cH40QJUdy7ECQg5QG4qL1wKBgQDugyaPEdoUCGC6MUas\nFR4kwDIkHj/UkgzYtsemmGG0rXCqVtIerPd6FvtKlN8BDzQbyqCaw/pDUqjFoGXN\nW969vkN5Uj9YaQ5qV8c9WLbCcMw9gT6rvqyC8b8FgwaWMKHx7TgI/8xXQ666XqpT\nMTAfINWWei0e/Scqqu6hw0v+UwKBgQDHF5ce9y9mHdVb8B7m0Oz4QIHksktKfoQa\nLoGS601zK6Rr6GeEHb03s4KLG5q9L/o9HUTXqyKERnofdEdfsGsnrKbz2Wsnr8Mk\nGwnNcPTvI3uYkeTBS4paNUxZyGVbxDOrRbBYukgwacaUIGbZ5+we1BxlVN04+l5W\nvAlNEvlfIwKBgBWMcdJhOYOv0hVgWFM5wTRuzNjohrnMzC5ULSuG/uTU+qXZHDi7\nRcyZAPEXDCLLXdjY8LOq2xR0Bl18hVYNY81ewDfYz3JMY4oGDjEjr7dXe4xe/euE\nWY+nCawUz2aIVElINlTRz4Ne0Q1zeg30FrXpQILM3QC8vGolcVPaEiaTAoGBALj7\nNjJTQPsEZSUTKeMT49mVNhsjfcktW9hntYSolEGaHx8TxHqAlzqV04kkkNWPKlZ2\nR2yLWXrFcNqg02AZLraiOE0BigpJyGpXpPf5J9q5gTD0/TKL2XSPaO1SwLpOxiMw\nkPUfv8sbvKIMqQN19XF/axLLkvBJ0DWOaKXwJzs5AoGAbO2BfPYQke9K1UhvX4Y5\nbpj6gMzaz/aeWKoC1KHijEZrY3P58I1Tt1JtZUAR+TtjpIiDY5D2etVLaLeL0K0p\nrti40epyx1RGo76MI01w+rgeZ95rmkUb9BJ3bG5WBrbrvMIHPnU+q6XOqrBij3pF\nWQAQ7pYkm/VubZlsFDMvMuA=\n-----END PRIVATE KEY-----\n",
+      "client_email": "googlesheetsarvin@xenon-point-351408.iam.gserviceaccount.com",
+      "client_id": "108653350174528163497",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://oauth2.googleapis.com/token",
+      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+      "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/googlesheetsarvin%40xenon-point-351408.iam.gserviceaccount.com"
+    }
+    
+    gsheet_key = re.search('(?<=\/d\/).*(?=\/edit)', url)[0]
+    gc = gspread.service_account_from_dict(credentials)
+    wb = gc.open_by_key(gsheet_key)
+    
+    try:
+        sh = wb.worksheet(title)
+        df = pd.DataFrame.from_records(sh.get_all_records())
+    except:
+        df = None
+    
+    return df
+
+def import_makes_list():
+    url = 'https://docs.google.com/spreadsheets/d/1SUBvR4UbpGzkMsxl_TXY7du45LKMDGP3_IHNd3tCzSY/edit#gid=1184913475'
+    key = re.search('(?<=\/d\/).*(?=\/edit)', url)[0]
+    
+    
+
 @st.cache_data
 def get_car_compatible():
     
@@ -578,18 +613,34 @@ def get_car_compatible():
     
         print ('Importing makes and models list')
         makes_list = config_carmax.import_makes()
+        #models_list = config_carmax.import_models()
         
         print ('Cleaning data')
         comp_data.loc[:, 'car_make'] = comp_data.apply(lambda x: config_carmax.clean_makes(x['car_make'], makes_list), axis=1)
+        #comp_data.loc[:, 'car_model'] = comp_data.apply(lambda x: config_carmax.clean_model(x['car_model'], makes_list, models_list), axis=1)
         comp_data.loc[:, 'car_model'] = comp_data.apply(lambda x: ' '.join(x['car_model'].split('-')).upper(), axis=1)
+        
         comp_data.loc[:, 'width'] =  comp_data.apply(lambda x: clean_width(x['section_width']), axis=1)
         comp_data.loc[:, 'aspect_ratio'] = comp_data.apply(lambda x: clean_aspect_ratio(x['aspect_ratio']), axis=1)
         comp_data.loc[:, 'diameter'] = comp_data.apply(lambda x: clean_diameter(x['rim_size']), axis=1)
         comp_data.loc[:, 'correct_specs'] = comp_data.apply(lambda x: combine_specs(x['width'], x['aspect_ratio'], x['diameter'], mode = 'MATCH'), axis=1)
+        #comp_data.to_csv('car_comp_tire_size.csv')
         return comp_data
     
     start_time = time.time()
     print ('Start car comparison tire size data import')
+    # if os.path.exists('car_comp_tire_size.csv'):
+    #     try:
+    #         car_comp_dtime = datetime.fromtimestamp(os.path.getmtime('car_comp_tire_size.csv')).date()
+    #         if (car_comp_dtime >= (datetime.today().date() - timedelta(days = 4))):
+    #             print (f'Importing recent saved data on {car_comp_dtime}')
+    #             comp_data = pd.read_csv('car_comp_tire_size.csv')
+    #         else:
+    #             raise Exception
+    #     except:
+    #         comp_data = import_data()
+    # else:
+    #     comp_data = import_data()
     comp_data = import_data()
     
     #comp_data.loc[:,'year'] = comp_data.year.astype(str)
@@ -671,23 +722,29 @@ if __name__ == '__main__':
         st.header('Tire Selection')
         
         tab_size, tab_car = st.tabs(['By Size', 'By Car Model'])
+        chosen_tab = stx.tab_bar(data = [
+            stx.TabBarItemData(id = 'by_size', title = 'By Size'),
+            stx.TabBarItemData(id = 'by_car_model', title = 'By Car Model')
+            ])
         
-        with tab_size:
+        placeholder = st.sidebar.container()
+        
+        if chosen_tab == 'by_size':
             
             w_list = ['Any Width'] + list(sorted(df.width.unique()))
             
-            width = st.selectbox('Width',
+            width = placeholder.selectbox('Width',
                                  options = w_list,
                                  index = 0)
             if width == 'Any Width':
-                w_filter = df
+                w_filter = df.copy()
             else:
                 w_filter = df[df['width'] == width]
             
             
             ar_list = ['Any Aspect Ratio'] + list(sorted(w_filter.aspect_ratio.unique()))
             
-            aspect_ratio = st.selectbox('Aspect Ratio',
+            aspect_ratio = placeholder.selectbox('Aspect Ratio',
                                  options = ar_list,
                                  index = 0)
             
@@ -697,7 +754,7 @@ if __name__ == '__main__':
                 ar_filter = w_filter[w_filter['aspect_ratio'] == aspect_ratio]
             
             d_list = ['Any Rim Diameter'] + list(sorted(ar_filter.diameter.unique()))
-            rim_diameter = st.selectbox('Rim Diameter',
+            rim_diameter = placeholder.selectbox('Rim Diameter',
                                  options = d_list,
                                  index = 0)
             
@@ -706,11 +763,11 @@ if __name__ == '__main__':
             else:
                 final_filter = ar_filter[ar_filter['diameter'] == rim_diameter]
                 
-        with tab_car:
+        elif chosen_tab == 'by_car_model':
             
             make_list = ['Any make'] + list(sorted(car_comp.car_make.unique()))
             
-            make = st.selectbox('Make',
+            make = placeholder.selectbox('Make',
                                  options = make_list,
                                  index = 0)
             if make == 'Any make':
@@ -721,7 +778,7 @@ if __name__ == '__main__':
             
             model_list = ['Any Model'] + list(sorted(make_filter.car_model.value_counts().keys()))
             
-            model = st.selectbox('Model',
+            model = placeholder.selectbox('Model',
                                  options = model_list,
                                  index = 0)
             
@@ -731,7 +788,7 @@ if __name__ == '__main__':
                 model_filter = make_filter[make_filter['car_model'] == model]
             
             y_list = ['Any Year'] + list(sorted(model_filter.car_year.unique()))
-            year = st.selectbox('Year',
+            year = placeholder.selectbox('Year',
                                  options = y_list,
                                  index = 0)
             
@@ -739,8 +796,12 @@ if __name__ == '__main__':
                 y_filter = model_filter
             else:
                 y_filter = model_filter[model_filter['car_year'] == year]
-
+            
             final_filter = df[df.correct_specs.isin(y_filter.correct_specs.unique())]
+            
+        else:
+            final_filter = df.copy()
+            placeholder.empty()
             
     # main window
     selected = final_filter.copy()
