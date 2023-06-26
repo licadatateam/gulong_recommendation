@@ -721,7 +721,7 @@ if __name__ == '__main__':
     with st.sidebar:
         st.header('Tire Selection')
         
-        tab_size, tab_car = st.tabs(['By Size', 'By Car Model'])
+        #tab_size, tab_car = st.tabs(['By Size', 'By Car Model'])
         chosen_tab = stx.tab_bar(data = [
             stx.TabBarItemData(id = 'by_size', title = 'By Size', description = 'Filter by Tire Size'),
             stx.TabBarItemData(id = 'by_car_model', title = 'By Car Model', description = 'Filter by Car Model')
