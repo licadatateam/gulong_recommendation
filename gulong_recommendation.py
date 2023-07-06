@@ -805,12 +805,15 @@ if __name__ == '__main__':
             placeholder.empty()
             
     # main window
-    selected = final_filter.copy()
-    tire_selected = tire_select(selected[display_cols])
+    tire_selected = tire_select(final_filter[display_cols])
 
-    selected.loc[:, 'od_diff'] = selected.overall_diameter.apply(lambda x: round(abs((x - selected['overall_diameter'].mean())*100/selected['overall_diameter'].mean()), 2))
+    # base OD difference from average OD of filtered gulong
+    # avg is same as filtered if specific dimensions selected
+    avg_OD = final_filter['overall_diameter'].mean()
+    df_temp_ = df.copy()
+    df_temp_.loc[:, 'od_diff'] = df_temp_.overall_diameter.apply(lambda x: round(abs((x - avg_OD)*100/avg_OD), 2))
     with st.expander('Filtered Gulong Recommendations', expanded = True):
-        st.dataframe(selected[selected.od_diff.between(0.01, 3)][display_cols + ['od_diff']].sort_values(['od_diff', 'base_GP', 'promo_GP'],
+        st.dataframe(df_temp_[df_temp_.od_diff.between(0.01, 3)][display_cols + ['od_diff']].sort_values(['od_diff', 'base_GP', 'promo_GP'],
                                                                         ascending = [True, False, False]))
     
     if tire_selected is not None:
