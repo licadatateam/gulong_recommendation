@@ -702,7 +702,7 @@ def tire_select(df_data):
 
     else:
         st.write('Click on an entry in the table to display customer data.')
-        df_list = df_display
+        df_list = None
         
     return df_list
 
@@ -807,27 +807,30 @@ if __name__ == '__main__':
     selected = final_filter.copy()
     tire_selected = tire_select(selected[display_cols])
     
-    # find products with overall diameter within 3% error
-    OD = tire_selected.overall_diameter.unique()[0]
-    
-    # calculate overall diameter % diff
-    df_temp = df.copy()
-    df_temp.loc[:, 'od_diff'] = df_temp.overall_diameter.apply(lambda x: round(abs((x - OD)*100/OD), 2))
-    compatible = df_temp[(df_temp.od_diff <= 3) & \
-                         ((df_temp.promo_GP >= tire_selected.promo_GP.max()) & \
-                          (df_temp.base_GP >= tire_selected.base_GP.max()))]
-    
-    with st.expander('**Product Recommendation**', 
-                     expanded = len(compatible)):
+    if tire_selected is not None:
+        # find products with overall diameter within 3% error
+        OD = tire_selected.overall_diameter.unique()[0]
         
-        st.info("""Recommended tires are those within ~3% change of selected tire's overall diameter.
-                Resulting recommended tires are then filtered by atleast selected tire's GP,
-                and then finally sorted by percent diff in overall diameter.""")
+        # calculate overall diameter % diff
+        df_temp = df.copy()
+        df_temp.loc[:, 'od_diff'] = df_temp.overall_diameter.apply(lambda x: round(abs((x - OD)*100/OD), 2))
+        compatible = df_temp[~df_temp.index.isin(list(tire_selected.index)) & (df_temp.od_diff <= 3) & \
+                             ((df_temp.promo_GP >= tire_selected.promo_GP.max()) & \
+                              (df_temp.base_GP >= tire_selected.base_GP.max()))]
         
-        if len(tire_selected) < len(selected):
-            if len(compatible) == 0:
-                st.error('No recommended tires found.')
+        with st.expander('**Product Recommendation**', 
+                         expanded = len(compatible)):
+            
+            st.info("""Recommended tires are those within ~3% change of selected tire's overall diameter.
+                    Resulting recommended tires are then filtered by atleast selected tire's GP,
+                    and then finally sorted by percent diff in overall diameter.""")
+            
+            if len(tire_selected) < len(selected):
+                if len(compatible) == 0:
+                    st.error('No recommended tires found.')
+                else:
+                    st.dataframe(compatible[display_cols + ['od_diff']].sort_values('od_diff', ascending = True))
             else:
-                st.dataframe(compatible[display_cols + ['od_diff']].sort_values('od_diff', ascending = True))
-        else:
-            pass
+                pass
+    else:
+        pass
