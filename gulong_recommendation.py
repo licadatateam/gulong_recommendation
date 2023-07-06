@@ -835,7 +835,7 @@ if __name__ == '__main__':
                     Resulting recommended tires are then filtered by atleast selected tire's GP,
                     and then finally sorted by percent diff in overall diameter.""")
             
-            if len(tire_selected) < len(selected):
+            if len(tire_selected) < len(final_filter):
                 if len(compatible) == 0:
                     st.error('No recommended tires found.')
                 else:
