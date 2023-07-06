@@ -829,7 +829,8 @@ if __name__ == '__main__':
                 if len(compatible) == 0:
                     st.error('No recommended tires found.')
                 else:
-                    st.dataframe(compatible[display_cols + ['od_diff']].sort_values('od_diff', ascending = True))
+                    st.dataframe(compatible[display_cols + ['od_diff']].sort_values(['od_diff', 'promo_GP', 'base_GP'],
+                                                                                    ascending = [True, False, False]))
             else:
                 pass
     else:
