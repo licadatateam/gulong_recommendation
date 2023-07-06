@@ -813,6 +813,7 @@ if __name__ == '__main__':
     df_temp_ = df.copy()
     df_temp_.loc[:, 'od_diff'] = df_temp_.overall_diameter.apply(lambda x: round(abs((x - avg_OD)*100/avg_OD), 2))
     with st.expander('Filtered Gulong Recommendations', expanded = True):
+        st.info('Recommended tires are within 3% of AVERAGE overall diameter of tires in current selection during/after filter by tire sizes or car model')
         st.dataframe(df_temp_[df_temp_.od_diff.between(0.01, 3)][display_cols + ['od_diff']].sort_values(['od_diff', 'base_GP', 'promo_GP'],
                                                                         ascending = [True, False, False]))
     
@@ -828,7 +829,7 @@ if __name__ == '__main__':
                               (df_temp.base_GP >= tire_selected.base_GP.max()))]
         compatible = compatible.drop_duplicates(subset = 'sku_name', keep = 'first')
 
-        with st.expander('**Product Recommendation**', 
+        with st.expander('**Selected Gulong Recommendation**', 
                          expanded = len(compatible)):
             
             st.info("""Recommended tires are those within ~3% change of selected tire's overall diameter.
