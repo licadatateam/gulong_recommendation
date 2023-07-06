@@ -814,7 +814,7 @@ if __name__ == '__main__':
         # calculate overall diameter % diff
         df_temp = df.copy()
         df_temp.loc[:, 'od_diff'] = df_temp.overall_diameter.apply(lambda x: round(abs((x - OD)*100/OD), 2))
-        compatible = df_temp[~df_temp.index.isin(list(tire_selected.index)) & (df_temp.od_diff <= 3) & \
+        compatible = df_temp[~df_temp.index.isin(list(tire_selected.index)) & (df_temp.od_diff.between(0.01, 3)) & \
                              ((df_temp.promo_GP >= tire_selected.promo_GP.max()) & \
                               (df_temp.base_GP >= tire_selected.base_GP.max()))]
         
