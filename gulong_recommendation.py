@@ -817,7 +817,8 @@ if __name__ == '__main__':
         compatible = df_temp[~df_temp.index.isin(list(tire_selected.index)) & (df_temp.od_diff.between(0.01, 3)) & \
                              ((df_temp.promo_GP >= tire_selected.promo_GP.max()) & \
                               (df_temp.base_GP >= tire_selected.base_GP.max()))]
-        
+        compatible = compatible.drop_duplicates(subset = 'sku_name', keep = 'first')
+
         with st.expander('**Product Recommendation**', 
                          expanded = len(compatible)):
             
