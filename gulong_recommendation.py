@@ -807,6 +807,11 @@ if __name__ == '__main__':
     # main window
     selected = final_filter.copy()
     tire_selected = tire_select(selected[display_cols])
+
+    selected.loc[:, 'od_diff'] = selected.overall_diameter.apply(lambda x: round(abs((x - selected['overall_diameter'].mean())*100/selected['overall_diameter'].mean()), 2))
+    with st.expander('Filtered Gulong Recommendations', expanded = True):
+        st.dataframe(selected[selected.od_diff.beteween(0.01, 3)][display_cols + ['od_diff']].sort_values(['od_diff', 'base_GP', 'promo_GP'],
+                                                                        ascending = [True, False, False]))
     
     if tire_selected is not None:
         # find products with overall diameter within 3% error
