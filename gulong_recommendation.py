@@ -824,12 +824,13 @@ if __name__ == '__main__':
             
     # main window
     #selected = final_filter.copy()
+    st.header('Available filtered Gulong.ph products')
     tire_selected = tire_select(final_filter[display_cols])
     
     avg_OD = final_filter['overall_diameter'].mean()
     df_temp_ = df.copy()
     df_temp_.loc[:, 'od_diff'] = df_temp_.overall_diameter.apply(lambda x: round(abs((x - avg_OD)*100/avg_OD), 2))
-    with st.expander('Filtered Gulong Recommendations', expanded = True):
+    with st.expander('Filtered Gulong.ph Recommendations', expanded = True):
         st.info('Recommended tires are within 3% of AVERAGE overall diameter of tires in current selection during/after filter by tire sizes or car model')
         df_temp_ = df_temp_[df_temp_.od_diff.between(0.01, 3) & 
                             ~df_temp_.index.isin(list(final_filter.index))]\
@@ -859,9 +860,8 @@ if __name__ == '__main__':
         with st.expander('**Selected Gulong Recommendations**', 
                          expanded = len(compatible)):
             
-            st.info("""Recommended tires are those within ~3% change of selected tire's overall diameter.
-                    Resulting recommended tires are then filtered by atleast selected tire's GP,
-                    and then finally sorted by percent diff in overall diameter.""")
+            st.info("""Recommended tires are those within ~3% change of selected tire's overall diameter and within +-1 of selected tire's load rating.
+                    Resulting recommended tires are then filtered by atleast selected tire's GP and then finally sorted by percent diff in overall diameter.""")
             
             if len(tire_selected) < len(final_filter):
                 if len(compatible) == 0:
