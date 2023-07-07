@@ -673,7 +673,7 @@ def tire_select(df_data):
     df_display = df_merged.sort_values(['promo_GP', 'base_GP', 'price_gulong'])
     gb = GridOptionsBuilder.from_dataframe(df_display)
     gb.configure_selection('single', use_checkbox=True, groupSelectsChildren="Group checkbox select children") #Enable multi-row selection
-    gb.configure_columns(df_display.columns, width = 100)
+    gb.configure_columns(df_display.columns, width = 60)
     gb.configure_column('sku_name', 
                         headerCheckboxSelection = True,
                         width = 400)
@@ -706,6 +706,24 @@ def tire_select(df_data):
         df_list = None
         
     return df_list
+
+def compare_load_rating(ref, val):
+    if pd.isna(ref) or (ref is None):
+        return np.NaN
+    else:
+        ref_list = str(ref).split('/')
+        val_list = str(val).split('/')
+        # both values are all numeric
+        if all(r.isnumeric() for r in ref_list) and all(v.isnumeric() for v in val_list):
+            if any((int(ref_list[-1])-1) <= int(v) <= (int(ref_list[0])+1) for v in val_list):
+                return True
+            else:
+                return False
+        # elif all(r.isalpha() for r in ref_list) or all(v.isalpha() for v in val_list):
+        #     return np.NaN
+        else:
+            return np.NaN
+                
 
 if __name__ == '__main__':
     
@@ -805,10 +823,9 @@ if __name__ == '__main__':
             placeholder.empty()
             
     # main window
+    #selected = final_filter.copy()
     tire_selected = tire_select(final_filter[display_cols])
-
-    # base OD difference from average OD of filtered gulong
-    # avg is same as filtered if specific dimensions selected
+    
     avg_OD = final_filter['overall_diameter'].mean()
     df_temp_ = df.copy()
     df_temp_.loc[:, 'od_diff'] = df_temp_.overall_diameter.apply(lambda x: round(abs((x - avg_OD)*100/avg_OD), 2))
@@ -827,12 +844,19 @@ if __name__ == '__main__':
         # calculate overall diameter % diff
         df_temp = df.copy()
         df_temp.loc[:, 'od_diff'] = df_temp.overall_diameter.apply(lambda x: round(abs((x - OD)*100/OD), 2))
-        compatible = df_temp[~df_temp.index.isin(list(tire_selected.index)) & (df_temp.od_diff.between(0.01, 3)) & \
-                             ((df_temp.promo_GP >= tire_selected.promo_GP.max()) & \
-                              (df_temp.base_GP >= tire_selected.base_GP.max()))]
+        try:
+            load_rating = tire_selected['load_rating'].values[0]
+            compatible = df_temp[~df_temp.index.isin(list(tire_selected.index)) & (df_temp.od_diff.between(0.01, 3)) & \
+                                 df_temp.load_rating.apply(lambda x: compare_load_rating(load_rating, x)) & \
+                                 ((df_temp.promo_GP >= tire_selected.promo_GP.max()) & \
+                                  (df_temp.base_GP >= tire_selected.base_GP.max()))]
+        except:
+            compatible = df_temp[~df_temp.index.isin(list(tire_selected.index)) & (df_temp.od_diff.between(0.01, 3)) & \
+                                 ((df_temp.promo_GP >= tire_selected.promo_GP.max()) & \
+                                  (df_temp.base_GP >= tire_selected.base_GP.max()))]
         compatible = compatible.drop_duplicates(subset = 'sku_name', keep = 'first')
-
-        with st.expander('**Selected Gulong Recommendation**', 
+            
+        with st.expander('**Selected Gulong Recommendations**', 
                          expanded = len(compatible)):
             
             st.info("""Recommended tires are those within ~3% change of selected tire's overall diameter.
