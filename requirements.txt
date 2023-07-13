@@ -6,3 +6,4 @@ extra_streamlit_components
 matplotlib
 google-cloud-bigquery
 google-auth
+db-dtypes
