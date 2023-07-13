@@ -1,9 +1,8 @@
 fuzzywuzzy
-scrapy
-google-cloud-storage
-scrapydo
-openai
 gspread
 streamlit>=1.20.0
 streamlit-aggrid
 extra_streamlit_components
+matplotlib
+google-cloud-bigquery
+google-auth
