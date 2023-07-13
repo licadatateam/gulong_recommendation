@@ -7,3 +7,4 @@ matplotlib
 google-cloud-bigquery<3.0.0
 google-auth
 db_dtypes
+db-dtypes
