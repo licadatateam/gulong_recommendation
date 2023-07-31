@@ -36,12 +36,7 @@ def get_gulong_data():
              'load_rating','speed_rating','stock','name','cost','srp', 'promo', 'mp_price',
              'b2b_price' , 'supplier_price_date_updated','product_price_date_updated',
              'supplier_id','sale_tag', 'promo_tag']]
-    # df = df[df.is_model_active==1].rename(columns={'model': 'sku_name',
-    #                                                'pattern' : 'name',
-    #                                                'make' : 'brand',
-    #                                                'section_width':'width', 
-    #                                                'rim_size':'diameter', 
-    #                                                'price' : 'price_gulong'}).reset_index()
+    
     df = df.rename(columns={'model': 'sku_name',
                             'name': 'supplier',
                             'pattern' : 'name',
@@ -70,7 +65,12 @@ def get_gulong_data():
                                                            str(x['speed_rating'])), 
                                                            axis=1)
     df.loc[:, 'base_GP'] = (df.loc[:, 'price_gulong'] - df.loc[:, 'cost']).round(2)
-    df.loc[:, 'promo_GP'] = df.apply(lambda x: config.promo_GP(x['price_gulong'], x['cost'], x['sale_tag'], x['promo_tag']), axis=1)
+    
+    active_promos = pd.read_csv('http://app.redash.licagroup.ph/api/queries/186/results.csv?api_key=8cDSJOq1Vwsc51HdjvAVQP1eQJePT5toNhFQVyzY',
+                                parse_dates = ['promo_start', 'promo_end']).fillna('')
+    
+    #df.loc[:, 'promo_GP'] = df.apply(lambda x: config.promo_GP(x['price_gulong'], x['cost'], x['sale_tag'], x['promo_tag']), axis=1)
+    df[['promo_GP', 'promo_id']] = df.apply(lambda x: config.promo_GP(x, active_promos), axis=1, result_type = 'expand')
     df = df[df.name !='-']
     df.sort_values('product_price_date_updated', ascending = False, inplace = True)
     df.drop_duplicates(subset = ['product_id', 'sku_name', 'cost', 'price_gulong', 'supplier'])
@@ -124,7 +124,7 @@ def tire_select(df_data):
     df_display = df_merged.sort_values(['promo_GP', 'base_GP', 'price_gulong'])
     gb = GridOptionsBuilder.from_dataframe(df_display)
     gb.configure_selection('single', use_checkbox=True, groupSelectsChildren="Group checkbox select children") #Enable multi-row selection
-    gb.configure_columns(df_display.columns, width = 60)
+    gb.configure_columns(df_display.columns, width = 100)
     gb.configure_column('sku_name', 
                         headerCheckboxSelection = True,
                         width = 400)
@@ -174,9 +174,7 @@ def compare_load_rating(ref, val):
         #     return np.NaN
         else:
             return np.NaN
-
-
-               
+          
 
 if __name__ == '__main__':
     
@@ -189,7 +187,7 @@ if __name__ == '__main__':
     display_cols = ['sku_name', 'width', 'aspect_ratio', 'diameter',
                     'load_rating', 'speed_rating', 'overall_diameter', 'cost', 
                     'srp', 'price_gulong', 'mp_price', 'b2b_price', 'base_GP',
-                    'promo_GP']
+                    'promo_GP', 'promo_id']
     
     with st.sidebar:
         st.header('Tire Selection')
@@ -301,20 +299,25 @@ if __name__ == '__main__':
         df_temp = df.copy()
         df_temp.loc[:, 'od_diff'] = df_temp.overall_diameter.apply(lambda x: round(abs((x - OD)*100/OD), 2))
         
-        price_range = 10
-        df_temp.price_gulong.between(tire_selected.price_gulong*(1.0-price_range/100.0), tire_selected.price_gulong*(1.0+price_range/100.0))
+        price_range = st.number_input('% difference of price from selected tire',
+                                      min_value = 0.0, 
+                                      max_value = 100.0,
+                                      value = 10.0, 
+                                      step = 0.5)
+        
+        price = tire_selected.price_gulong.values[0]
         
         try:
             load_rating = tire_selected['load_rating'].values[0]
             compatible = df_temp[~df_temp.index.isin(list(tire_selected.index)) & (df_temp.od_diff.between(0.01, 3)) & \
                                  df_temp.load_rating.apply(lambda x: compare_load_rating(load_rating, x)) & \
-                                df_temp.price_gulong.between(tire_selected.price_gulong*(1.0-price_range/100.0), tire_selected.price_gulong*(1.0+price_range/100.0)) & \
+                                df_temp.price_gulong.between(price*(1.0-price_range/100.0), price*(1.0+price_range/100.0)) & \
                                  ((df_temp.promo_GP >= tire_selected.promo_GP.max()) & \
                                   (df_temp.base_GP >= tire_selected.base_GP.max()))]
         except:
             compatible = df_temp[~df_temp.index.isin(list(tire_selected.index)) & (df_temp.od_diff.between(0.01, 3)) & \
                                  ((df_temp.promo_GP >= tire_selected.promo_GP.max()) & \
-                                  df_temp.price_gulong.between(tire_selected.price_gulong*(1.0-price_range/100.0), tire_selected.price_gulong*(1.0+price_range/100.0)) & \
+                                  df_temp.price_gulong.between(price*(1.0-price_range/100.0), price*(1.0+price_range/100.0)) & \
                                   (df_temp.base_GP >= tire_selected.base_GP.max()))]
         
         ## check if compatible is not empty
